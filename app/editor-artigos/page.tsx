@@ -81,7 +81,10 @@ export default function Editor(){
   }
 
   async function remove(a:Article){
+    if(busy)return;
     if(!confirm(`Excluir definitivamente “${a.title}”?`))return;
+    setBusy(true);
+    try {
     setStatus('Excluindo artigo…');
     const r=await fetch(`/api/articles/${a.slug}`,{method:'DELETE'});
     const j=await r.json();
@@ -89,6 +92,8 @@ export default function Editor(){
     if(editing===a.slug)newArticle();
     setStatus('Artigo excluído.');
     await load();
+    } catch(e){setStatus(e instanceof Error?e.message:'Erro ao excluir artigo.')}
+    finally{setBusy(false)}
   }
 
   return <div className="editor-shell">
@@ -123,15 +128,15 @@ export default function Editor(){
             <button className="btn primary" disabled={busy||uploading||storage!=='connected'}>{busy?'Salvando…':editing?'Salvar alterações':'Publicar artigo'}</button>
             {editing&&<button type="button" className="btn ghost" onClick={newArticle}>Novo artigo</button>}
           </div>
-          <div className="editor-status">{status}</div>
+          <div className="editor-status" role="status" aria-live="polite">{status}</div>
         </form>
       </section>
 
       <aside className="editor-library">
-        <div className="editor-library-head"><div><span className="kicker">Biblioteca</span><h2>Artigos publicados</h2></div><button type="button" onClick={newArticle}>+ Novo</button></div>
+        <div className="editor-library-head"><div><span className="kicker">Biblioteca</span><h2>Artigos publicados ({articles.length})</h2></div><button type="button" onClick={newArticle}>+ Novo</button></div>
         {articles.length===0?<p className="editor-empty">Nenhum artigo publicado.</p>:<div className="editor-article-list">{articles.map(a=><article key={a.slug} className={editing===a.slug?'active':''}>
           <div><span>{a.category}</span><h3>{a.title}</h3><small>{new Date(a.publishedAt).toLocaleDateString('pt-BR')}</small></div>
-          <div className="editor-item-actions"><button type="button" onClick={()=>editArticle(a)}>Editar</button><a href={`/artigos/${a.slug}`} target="_blank">Ver</a><button className="danger" type="button" onClick={()=>remove(a)}>Excluir</button></div>
+          <div className="editor-item-actions"><button type="button" disabled={busy} onClick={()=>editArticle(a)}>Editar</button><a href={`/artigos/${a.slug}`} target="_blank">Ver</a><button className="danger" type="button" disabled={busy} onClick={()=>remove(a)}>Excluir</button></div>
         </article>)}</div>}
       </aside>
     </div>

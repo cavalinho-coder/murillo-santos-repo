@@ -13,7 +13,7 @@ const focus=[
   {icon:Baby,title:'Obstetrícia',text:'Pré-natal de baixo e alto risco e acompanhamento do parto de forma respeitosa e humanizada.'}
 ];
 const conditions=['Endometriose profunda','Miomas e pólipos','Adenomiose','Infertilidade','Sangramento uterino anormal','Menopausa','Incontinência urinária','Prolapsos genitais'];
-export default async function Home(){const articles=(await getArticles()).slice(0,3);return <>
+export default async function Home(){const articles=await getArticles();return <>
 <section className="hero"><div className="hero-orb orb-a"/><div className="hero-orb orb-b"/><div className="container hero-grid">
   <div className="hero-copy"><Reveal><div className="eyebrow"><Sparkles size={15}/> Saúde da mulher em Maringá</div><h1>Precisão cirúrgica.<br/><em>Cuidado que acolhe.</em></h1><p>Ginecologia, obstetrícia e cirurgia ginecológica minimamente invasiva com acompanhamento individualizado em cada fase da vida.</p><div className="hero-actions"><a className="btn primary" href={whatsapp()} target="_blank">Agendar consulta <ArrowUpRight size={18}/></a><Link className="btn ghost" href="/tratamentos">Conhecer tratamentos</Link></div><div className="micro-proof"><span><b>Ginecologia</b> e Obstetrícia</span><span><b>Endoscopia</b> ginecológica</span><span><b>Cirurgia</b> minimamente invasiva</span></div></Reveal></div>
   <Reveal delay={.14} className="hero-visual"><div className="image-frame"><Image src="/images/murillo-hero.webp" fill quality={92} priority sizes="(max-width: 900px) 92vw, 42vw" alt="Dr. Murillo Santos, ginecologista em Maringá"/></div><div className="floating-card"><ShieldCheck/><div><strong>CRM-PR 43.086</strong><span>RQE 32.072 · RQE 34.548</span></div></div></Reveal>

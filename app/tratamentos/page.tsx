@@ -1,5 +1,5 @@
 import Reveal from '@/components/Reveal'; import { whatsapp } from '@/lib/site';
-export const metadata={title:'Tratamentos e Procedimentos',description:'Consultas, pré-natal, histeroscopia, laparoscopia, endometriose e cirurgias ginecológicas com Dr. Murillo Santos em Maringá.'};
+export const metadata={alternates:{canonical:'/tratamentos'},title:'Tratamentos e Procedimentos',description:'Consultas, pré-natal, histeroscopia, laparoscopia, endometriose e cirurgias ginecológicas com Dr. Murillo Santos em Maringá.'};
 const groups: Array<[string, string[]]>=[
 ['Consultas e acompanhamento',['Consulta ginecológica de rotina','Pré-natal de baixo e alto risco','Investigação de infertilidade','Investigação de dor pélvica crônica','Terapia de reposição hormonal pós-menopausa','Acompanhamento de parto normal e cesariana']],
 ['Cirurgia ginecológica',['Histerectomia por diferentes vias','Laqueadura tubária','Ooforectomia','Ooforoplastia','Miomectomia','Correção cirúrgica de endometriose profunda','Ninfoplastia']],

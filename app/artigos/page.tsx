@@ -1,5 +1,5 @@
 import Link from 'next/link'; import { getArticles } from '@/lib/articles';
 export const dynamic='force-dynamic';
 export const revalidate=0;
-export const metadata={title:'Artigos',description:'Conteúdos do Dr. Murillo Santos sobre saúde da mulher, ginecologia, obstetrícia e cirurgia ginecológica.'};
+export const metadata={alternates:{canonical:'/artigos'},title:'Artigos',description:'Conteúdos do Dr. Murillo Santos sobre saúde da mulher, ginecologia, obstetrícia e cirurgia ginecológica.'};
 export default async function Artigos(){const articles=await getArticles();return <><section className="inner-hero"><div className="container"><span className="kicker">Artigos</span><h1>Informação médica em linguagem clara.</h1><p>Conteúdos para ajudar você a compreender temas de saúde da mulher e conversar melhor sobre suas opções de cuidado.</p></div></section><section className="section"><div className="container">{articles.length?<div className="articles-grid">{articles.map(a=><Link href={`/artigos/${a.slug}`} className="article-card large" key={a.slug}><span>{a.category}</span><h2>{a.title}</h2><p>{a.excerpt}</p><small>{new Date(a.publishedAt).toLocaleDateString('pt-BR')}</small></Link>)}</div>:<div className="empty-articles"><h2>Em breve.</h2><p>Os primeiros artigos estão sendo preparados.</p></div>}</div></section></>}

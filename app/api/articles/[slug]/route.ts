@@ -1,46 +1,56 @@
 import { NextResponse } from 'next/server';
 import { revalidatePath } from 'next/cache';
-import { getArticle } from '@/lib/articles';
+import { getArticle, readArticleIndex, writeArticleIndex, sharedIndexUrl, articleToken } from '@/lib/articles';
+import { articleInput } from '@/lib/article-input';
 
 export async function PUT(req:Request,{params}:{params:Promise<{slug:string}>}){
  try{
-  if(!process.env.BLOB_READ_WRITE_TOKEN)return NextResponse.json({error:'Armazenamento ainda não conectado.'},{status:503});
+  if(!articleToken())return NextResponse.json({error:'Armazenamento ainda não conectado.'},{status:503});
   const {slug}=await params;
-  const current=await getArticle(slug);
+  const rows=sharedIndexUrl?await readArticleIndex():undefined;
+  const current=rows?rows.find(row=>row.slug===slug):await getArticle(slug);
   if(!current)return NextResponse.json({error:'Artigo não encontrado.'},{status:404});
   const body=await req.json();
-  if(!body.title||!body.excerpt||!body.content)return NextResponse.json({error:'Preencha título, resumo e conteúdo.'},{status:400});
+  let input;
+  try { input=articleInput(body); } catch { return NextResponse.json({error:'Preencha título, resumo e conteúdo.'},{status:400}); }
   const article={
     ...current,
-    title:String(body.title).trim(),
-    excerpt:String(body.excerpt).trim(),
-    content:String(body.content).trim(),
-    category:String(body.category||'Saúde da mulher').trim(),
-    image:body.image?String(body.image):undefined,
-    youtube:body.youtube?String(body.youtube).trim():undefined,
+    ...input,
     updatedAt:new Date().toISOString()
   };
-  const {put}=await import('@vercel/blob');
-  await put(`articles/${slug}.json`,JSON.stringify(article),{access:'public',contentType:'application/json',addRandomSuffix:false,allowOverwrite:true});
+  if(rows){
+    await writeArticleIndex(rows.map(row=>row.slug===slug?{...row,...article,coverImage:article.image}:row));
+  }else{
+    const {put}=await import('@vercel/blob');
+    await put(`articles/${slug}.json`,JSON.stringify(article),{access:'public',contentType:'application/json',addRandomSuffix:false,allowOverwrite:true,cacheControlMaxAge:0,token:articleToken()});
+  }
   revalidatePath('/');
   revalidatePath('/artigos');
   revalidatePath(`/artigos/${slug}`);
+  revalidatePath('/sitemap.xml');
   return NextResponse.json(article);
  }catch(e){return NextResponse.json({error:e instanceof Error?e.message:'Erro ao atualizar artigo.'},{status:500})}
 }
 
 export async function DELETE(_req:Request,{params}:{params:Promise<{slug:string}>}){
  try{
-  if(!process.env.BLOB_READ_WRITE_TOKEN)return NextResponse.json({error:'Armazenamento ainda não conectado.'},{status:503});
+  if(!articleToken())return NextResponse.json({error:'Armazenamento ainda não conectado.'},{status:503});
   const {slug}=await params;
-  const {list,del}=await import('@vercel/blob');
-  const result=await list({prefix:`articles/${slug}.json`});
-  const target=result.blobs.find(b=>b.pathname===`articles/${slug}.json`);
-  if(!target)return NextResponse.json({error:'Artigo não encontrado.'},{status:404});
-  await del(target.url);
+  if(sharedIndexUrl){
+    const rows=await readArticleIndex();
+    if(!rows.some(row=>row.slug===slug))return NextResponse.json({error:'Artigo não encontrado.'},{status:404});
+    await writeArticleIndex(rows.filter(row=>row.slug!==slug));
+  }else{
+    const {list,del}=await import('@vercel/blob');
+    const result=await list({prefix:`articles/${slug}.json`,token:articleToken()});
+    const target=result.blobs.find(b=>b.pathname===`articles/${slug}.json`);
+    if(!target)return NextResponse.json({error:'Artigo não encontrado.'},{status:404});
+    await del(target.url,{token:articleToken()});
+  }
   revalidatePath('/');
   revalidatePath('/artigos');
   revalidatePath(`/artigos/${slug}`);
+  revalidatePath('/sitemap.xml');
   return NextResponse.json({ok:true});
  }catch(e){return NextResponse.json({error:e instanceof Error?e.message:'Erro ao excluir artigo.'},{status:500})}
 }
