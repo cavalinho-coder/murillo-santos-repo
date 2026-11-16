@@ -1,5 +1,5 @@
 'use client';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { usePathname } from 'next/navigation';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
@@ -14,6 +14,20 @@ function GoogleAdsMeasurement() {
   const [consent, setConsent] = useState<Consent | null>(null);
   const [ready, setReady] = useState(false);
   const [editing, setEditing] = useState(false);
+  const dialogRef = useRef<HTMLDialogElement>(null);
+  const showDialog = ready && (!consent || editing);
+
+  useEffect(() => {
+    if (!showDialog) return;
+    const dialog = dialogRef.current;
+    dialog?.showModal();
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      dialog?.close();
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [showDialog]);
 
   useEffect(() => {
     try {
@@ -89,18 +103,44 @@ function GoogleAdsMeasurement() {
     </div>;
   }
 
-  return <section aria-label="Preferências de cookies" style={{
-    position:'fixed', bottom:'1rem', left:'1rem', zIndex:1000,
-    width:'min(24rem, calc(100% - 2rem))', background:'#fff', color:'#222',
-    border:'1px solid #ddd', borderRadius:'0.75rem', padding:'1rem',
-    boxShadow:'0 4px 20px #0002',
-  }}>
-    <p>Com sua autorização, usamos cookies do Google Ads para medir cliques no botão de WhatsApp desta página.</p>
-    <div style={{display:'flex',flexWrap:'wrap',gap:'0.75rem',marginTop:'0.75rem'}}>
-      <button type="button" onClick={() => saveConsent('denied')}>Recusar</button>
-      <button type="button" onClick={() => saveConsent('granted')}>Aceitar</button>
+  const buttonStyle = {
+    flex: '1 1 9rem',
+    minHeight: '3rem',
+    background: '#fff',
+    color: '#222',
+    border: '2px solid #444',
+    borderRadius: '0.5rem',
+    fontWeight: 700,
+    cursor: 'pointer',
+  } as const;
+
+  return <dialog
+    ref={dialogRef}
+    aria-labelledby="cookie-preferences-title"
+    aria-describedby="cookie-preferences-description"
+    onCancel={(event) => event.preventDefault()}
+    style={{
+      position: 'fixed', inset: 0, margin: 'auto',
+      width: 'min(36rem, calc(100% - 2rem))',
+      background: '#fff', color: '#222',
+      border: '1px solid #ddd', borderRadius: '1rem',
+      padding: 'clamp(1.25rem, 5vw, 2.5rem)',
+      boxShadow: '0 12px 44px #0005',
+    }}
+  >
+    <style>{'dialog[aria-labelledby="cookie-preferences-title"]::backdrop { background: rgba(0, 0, 0, 0.72); }'}</style>
+    <h2 id="cookie-preferences-title" style={{fontSize:'clamp(1.5rem, 4vw, 2rem)', margin:'0 0 1rem'}}>
+      Preferências de cookies
+    </h2>
+    <p id="cookie-preferences-description">
+      Com sua autorização, usamos cookies do Google Ads para medir cliques no botão de WhatsApp desta página.
+      Escolha uma opção para continuar.
+    </p>
+    <div style={{display:'flex',flexWrap:'wrap',gap:'0.75rem',marginTop:'1.5rem'}}>
+      <button type="button" style={buttonStyle} onClick={() => saveConsent('denied')}>Recusar</button>
+      <button type="button" style={buttonStyle} onClick={() => saveConsent('granted')}>Aceitar</button>
     </div>
-  </section>;
+  </dialog>;
 }
 
 export default function SiteChrome({children}:{children:React.ReactNode}){
