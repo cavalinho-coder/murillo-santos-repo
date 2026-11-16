@@ -7,7 +7,7 @@ import Footer from '@/components/Footer';
 import ScrollProgress from '@/components/ScrollProgress';
 
 const adsId = 'AW-16906063808';
-const consentKey = 'google-ads-measurement';
+const consentKey = 'google-ads-measurement-v2';
 type Consent = 'granted' | 'denied';
 type AdsWindow = Window & { dataLayer?: unknown[]; gtag?: (...args: unknown[]) => void };
 
