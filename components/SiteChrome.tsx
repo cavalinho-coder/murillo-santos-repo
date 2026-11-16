@@ -1,6 +1,7 @@
 'use client';
 import { useEffect, useRef, useState } from 'react';
 import { usePathname } from 'next/navigation';
+import { site } from '@/lib/site';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import ScrollProgress from '@/components/ScrollProgress';
@@ -62,18 +63,20 @@ function GoogleAdsMeasurement() {
     }
 
     function trackClick(event: MouseEvent) {
-      if (window.location.pathname !== '/' || !(event.target instanceof Element)) return;
+      if (window.location.pathname.startsWith('/editor-artigos') || !(event.target instanceof Element)) return;
       const link = event.target.closest<HTMLAnchorElement>('a[href]');
       if (!link) return;
       const url = new URL(link.href);
       const isClinicWhatsApp =
-        (url.hostname === 'wa.me' && url.pathname === '/5544991291105') ||
+        (url.hostname === 'wa.me' && url.pathname === '/' + site.phone) ||
         (url.hostname === 'api.whatsapp.com' && url.pathname === '/send' &&
-          url.searchParams.get('phone') === '5544991291105');
+          url.searchParams.get('phone') === site.phone);
       if (!isClinicWhatsApp || url.protocol !== 'https:') return;
       ads.gtag?.('event', 'conversion', {
         send_to: adsId + '/PpACCKfc-ZQbEMCfuP0-',
         transport_type: 'beacon',
+        page_location: window.location.origin + '/',
+        page_referrer: '',
       });
     }
 
@@ -133,7 +136,7 @@ function GoogleAdsMeasurement() {
       Preferências de cookies
     </h2>
     <p id="cookie-preferences-description">
-      Com sua autorização, usamos cookies do Google Ads para medir cliques no botão de WhatsApp desta página.
+      Com sua autorização, usamos cookies do Google Ads para medir cliques no botão de WhatsApp neste site.
       Escolha uma opção para continuar.
     </p>
     <div style={{display:'flex',flexWrap:'wrap',gap:'0.75rem',marginTop:'1.5rem'}}>
@@ -147,5 +150,5 @@ export default function SiteChrome({children}:{children:React.ReactNode}){
   const pathname=usePathname();
   const isEditor=pathname.startsWith('/editor-artigos');
   if(isEditor) return <>{children}</>;
-  return <><ScrollProgress/><Header/><main>{children}</main><Footer/>{pathname === '/' && <GoogleAdsMeasurement/>}</>;
+  return <><ScrollProgress/><Header/><main>{children}</main><Footer/><GoogleAdsMeasurement/></>;
 }
